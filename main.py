@@ -1,6 +1,7 @@
 """Script parsing a Nexus url and look for the latest docker image"""
 
 import argparse
+import dateutil
 import requests
 import sys
 import pandas as pd
@@ -12,9 +13,7 @@ def poll(url):
     requests.get(url)
     page = requests.get(url)
     soup = BeautifulSoup(page.text, 'lxml')
-#    print(soup)
     table_data = soup.find('table')
-#    print(table_data)
 
     headers = []
     for i in table_data.find_all('th'):
@@ -29,7 +28,12 @@ def poll(url):
         length = len(df)
         df.loc[length] = row
 
-#    print(df.to_markdown())
+    # Convert Last Modified from string to datetime and sort by timestamp
+    tzmapping = {'CEST': dateutil.tz.gettz('Europe/Berlin')}
+    df['Last Modified'] = df['Last Modified'].apply(dateutil.parser.parse, tzinfos=tzmapping)
+    df = df.sort_values(by=['Last Modified'], ascending=False)
+
+    print(df.to_markdown())
     return df
 
 
