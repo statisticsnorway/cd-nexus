@@ -31,10 +31,15 @@ def poll(url):
     # Convert Last Modified from string to datetime and sort by timestamp
     tzmapping = {'CEST': dateutil.tz.gettz('Europe/Berlin')}
     df['Last Modified'] = df['Last Modified'].apply(dateutil.parser.parse, tzinfos=tzmapping)
-    df = df.sort_values(by=['Last Modified'], ascending=False)
 
     print(df.to_markdown())
     return df
+
+
+def get_latest_image_name(df):
+    """Parse the dataframe and return the latest image name and timestamp."""
+    df = df.sort_values(by=['Last Modified'], ascending=False)
+    return (df['Name'].values[0], df['Last Modified'].values[0])
 
 
 def main():
@@ -44,7 +49,8 @@ def main():
     args = parser.parse_args()
 
     if args.url:
-        poll(args.url)
+        latest_image = get_latest_image_name(poll(args.url))
+        print(f'Latest image tag: {latest_image[0]}, timestamp {latest_image[1]}')
 
 
 if __name__ == '__main__':
